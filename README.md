@@ -151,3 +151,27 @@ Ainsi on a un serveur local SMTP qui tourne sur `localhost:1025` et on peut acc�
 Depuis notre machine Ubuntu qui représente l'agent Wazuh et donc ma cible, nous pouvons accéder à la boite mail via l'url http://192.168.133.128:8025 dans le navigateur.  
 
 Pour tester nos résultats nous avons configurés le SOC de sorte qu'il surveille de manière active le repertoire root, log toute modification et scan les fichiers ajoutés avec Virus Total. Si le fichier est considéré comme une menace alors il est supprimé. 
+
+### 1 - Dans le repertoire Téléchargements   
+Une fois sur la machine Ubuntu, nous accédons à la boite mail, entrons dans le mail et téléchargeons le fichier fichier. Ainsi, nous suivont les actions mentionnées dans le mail. 
+
+/// Image de lancement de la payload   
+
+
+/// Image de reception de la connexion   
+
+
+### 2 - Dans le repertoire /root
+
+Pour observer la réactivité du SOC nous allons donc transférer le repertoire dézippé dans `/root` . On observe donc que le fichier `update.elf` qui initialement était présent dans le repertoire `update` est supprimé une fois que ce repertoire est transféré dans `/root`  
+
+```bash
+root@ubuntu-VMware-Virtual-Platform:/home/ubuntu/Téléchargements# ls
+PowerView.ps1  update  update.zip
+ubuntu@ubuntu-VMware-Virtual-Platform:~/Téléchargements$ ls update
+script.sh  update.elf
+root@ubuntu-VMware-Virtual-Platform:/home/ubuntu/Téléchargements# cp -r update /root
+root@ubuntu-VMware-Virtual-Platform:/home/ubuntu/Téléchargements# cd /root/update/
+root@ubuntu-VMware-Virtual-Platform:~/update# ls
+script.sh
+```
