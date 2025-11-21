@@ -108,3 +108,17 @@ Ce message est g&eacute;n&eacute;r&eacute; automatiquement, merci de ne pas y r&
 Il suffit ensuite de lancer la campagne. Mais avant de lancer la campagne nous avons installer mailhog.
 
 #### e - Install de mailhog 
+
+```bash
+sudo apt update
+sudo apt install -y wget
+wget https://github.com/mailhog/MailHog/releases/download/v1.0.1/MailHog_linux_amd64
+chmod +x MailHog_linux_amd64
+sudo mv MailHog_linux_amd64 /usr/local/bin/mailhog
+mailhog
+```
+
+Ainsi on a un serveur local SMTP qui tourne sur `localhost:1025` et on peut accéder à la boite mail sur `localhost:8025`  
+
+#### d - Lacement de la campagne de fishing  
+
